@@ -38,12 +38,12 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;bac
 [hidden]{display:none !important}
 
 /* ── Overlays ── */
-.ov{position:fixed;inset:0;z-index:900;display:flex;align-items:center;justify-content:center;padding:16px;overflow-y:auto;background:rgba(250,246,240,.97);backdrop-filter:blur(6px)}
+.ov{position:fixed;inset:0;z-index:900;display:flex;align-items:center;justify-content:center;padding:16px;overflow-y:auto;background:#f4f2f7;backdrop-filter:none}
 .ov[hidden]{display:none}
 .ov.z-top{z-index:999}
-.card{background:#fff;border-radius:var(--radius-lg);padding:clamp(24px,5vw,36px);box-shadow:var(--shadow-lg);max-width:540px;width:100%;text-align:center;border:2.5px solid var(--border);max-height:94dvh;overflow-y:auto}
+.card{background:#fff;border-radius:var(--radius-lg);padding:clamp(24px,5vw,36px);box-shadow:var(--shadow-lg);max-width:540px;width:100%;text-align:center;border:2.5px solid var(--border);max-height:94dvh;overflow-y:auto;color:#1a1a2e}
 .card h2{font-size:clamp(1.5rem,4vw,2rem);color:var(--accent);margin-bottom:8px}
-.card p{color:var(--ink-dim);font-size:.9rem;font-weight:600;line-height:1.6;margin-bottom:12px}
+.card p{color:#3d3a4e;font-size:.9rem;font-weight:600;line-height:1.6;margin-bottom:12px}
 .card a{color:var(--accent)}
 .field{width:100%;border:2.5px solid var(--border);border-radius:var(--radius);padding:14px 18px;font-family:'Baloo 2',cursive;font-size:1.05rem;font-weight:600;color:var(--ink);outline:none;background:#fafafd;margin-bottom:12px;transition:border-color .2s}
 .field:focus{border-color:var(--accent);background:#fff}
@@ -201,8 +201,8 @@ select.field{cursor:pointer;-webkit-appearance:none;appearance:none;background:#
 
 /* ── Debrief ── */
 .debrief h2{font-size:clamp(1.5rem,4vw,2rem);margin-bottom:8px}
-.debrief-sub{color:var(--ink-dim);font-size:.9rem;font-weight:600;text-align:center;margin-bottom:16px}
-.debrief-q{font-size:.84rem;font-weight:800;color:var(--ink);text-transform:uppercase;letter-spacing:.8px;margin:18px 0 10px}
+.debrief-sub{color:#3d3a4e;font-size:.9rem;font-weight:700;text-align:center;margin-bottom:16px}
+.debrief-q{font-size:.84rem;font-weight:800;color:#1a1a2e;text-transform:uppercase;letter-spacing:.8px;margin:18px 0 10px}
 .moods{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
 .mood{display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 10px;border-radius:16px;border:3px solid var(--border);background:#fafafd;cursor:pointer;transition:all .2s;min-width:58px;font-size:.68rem;font-weight:700;color:var(--ink-light)}
 .mood i{font-size:2rem;line-height:1;font-style:normal}
@@ -212,12 +212,14 @@ select.field{cursor:pointer;-webkit-appearance:none;appearance:none;background:#
 .when:hover,.when[aria-selected=true]{border-color:var(--accent);color:#fff;background:var(--accent)}
 
 /* ── Summary + Share (post-session) ── */
-.summary-box{background:#f0eff5;border:2px solid var(--border);border-radius:16px;padding:16px;margin:16px 0;text-align:left}
+.summary-box{background:#ffffff;border:2px solid var(--border);border-radius:16px;padding:16px;margin:16px 0;text-align:left}
 .summary-box h4{font-size:.9rem;color:var(--accent);margin-bottom:8px}
-.summary-box .stat{display:flex;justify-content:space-between;padding:4px 0;font-size:.88rem;font-weight:600;color:var(--ink);border-bottom:1px solid var(--border)}
+.summary-box .stat{display:flex;justify-content:space-between;padding:6px 0;font-size:.88rem;font-weight:700;color:#1a1a2e;border-bottom:1px solid #e8e6ee}
 .summary-box .stat:last-child{border-bottom:none}
+.summary-box .stat span:last-child{color:#1a1a2e;font-weight:800}
 .share-form{text-align:left;margin-top:16px}
-.share-form label{display:block;font-size:.78rem;font-weight:800;color:var(--ink);margin-bottom:3px;text-transform:uppercase;letter-spacing:.4px}
+.share-form label{display:block;font-size:.78rem;font-weight:800;color:#1a1a2e;margin-bottom:3px;text-transform:uppercase;letter-spacing:.4px}
+.share-form p{color:#1a1a2e !important}
 
 /* ── Confetti ── */
 .pop{position:fixed;pointer-events:none;z-index:9999;font-size:1.9rem;animation:fly 1.4s ease-out forwards}
@@ -251,8 +253,8 @@ body.dark .ov{background:rgba(21,18,25,.97)}
 </head>
 <body>
 <div class="blobs"><i></i><i></i><i></i></div>
-<input type="file" id="fileIn" accept="image/*" capture="environment" hidden>
-<input type="file" id="pvFileIn" accept="image/*" capture="environment" hidden>
+<input type="file" id="fileIn" accept="image/*" hidden>
+<input type="file" id="pvFileIn" accept="image/*" hidden>
 
 <!-- SETUP -->
 <div class="ov z-top" id="OSetup">
