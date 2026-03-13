@@ -304,12 +304,26 @@ body.dark .nb-overlay .nb-panel .sb-head *{color:#fff}
 
 /* ── Mobile ── */
 @media(max-width:799px){
-html{font-size:16px}.topbar{padding:6px 10px;gap:5px}.logo{font-size:1rem}
+html{font-size:16px}
+.topbar{padding:6px 10px;gap:4px;flex-wrap:wrap}
+.logo{font-size:1rem}
+.topbar-r{gap:4px;flex-wrap:wrap;justify-content:flex-end}
+.topbar-r .pill-tok{display:none}
 .app.live{grid-template-columns:1fr!important;max-width:900px}
 .app.live .sidebar{display:none!important}
 .app.live .main-area{grid-column:1/-1}
 .qcard{padding:18px 18px 16px 28px}
 .nb-fab.show{display:flex}
+.main-area{padding:10px;padding-bottom:env(safe-area-inset-bottom,10px)}
+.acts{gap:8px;padding-bottom:10px}
+.btn-help{padding:12px 20px;font-size:.95rem}
+.ws-pick-item{flex-direction:column!important;align-items:flex-start!important}
+.ws-pick-item>div:last-child:not(:first-child){width:100%!important;max-height:60px!important}
+}
+@media(max-width:400px){
+.topbar-r .pill-stars{padding:2px 8px;font-size:.7rem}
+.topbar-r .clk{transform:scale(.85);transform-origin:right center}
+.btn-xs{padding:5px 8px;font-size:.72rem}
 }
 @media(hover:none){.btn-round{width:48px;height:48px}.chip{padding:7px 14px;font-size:.78rem}}
 </style>
@@ -494,7 +508,7 @@ html{font-size:16px}.topbar{padding:6px 10px;gap:5px}.logo{font-size:1rem}
     </div>
     <!-- Action buttons -->
     <div class="acts" id="dActs" hidden>
-      <div id="dNext" style="display:none;width:100%;max-width:640px;display:none;gap:8px;flex-wrap:wrap;justify-content:center">
+      <div id="dNext" style="display:none;width:100%;max-width:640px;gap:8px;flex-wrap:wrap;justify-content:center">
         <!-- Buttons injected dynamically based on mode -->
       </div>
       <button class="btn btn-help" id="bHelp">I need help!</button>
@@ -543,7 +557,7 @@ html{font-size:16px}.topbar{padding:6px 10px;gap:5px}.logo{font-size:1rem}
 // ║  PASTE YOUR API KEY BELOW (between the quotes) ║
 // ║  Then deploy — kids won't see the setup screen  ║
 // ╚═══════════════════════════════════════════════╝
-const BUILT_IN_KEY = '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';
+const BUILT_IN_KEY = ' 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';
 
 const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
@@ -587,12 +601,16 @@ const App={
   customThemes:JSON.parse(localStorage.getItem('sm_custom_themes')||'[]'),
 
   // ── API ──
-  async api(msgs,{system,maxTok=1000}={}){
-    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':this.key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:maxTok,...(system?{system}:{}),messages:msgs})});
-    if(!r.ok)throw new Error(await r.text().catch(()=>r.status));
-    const d=await r.json();
-    if(d.usage){const i=d.usage.input_tokens||0,o=d.usage.output_tokens||0;this.tokIn+=i;this.tokOut+=o;this.apiCalls++;this.allTokIn+=i;this.allTokOut+=o;this.allCalls++;localStorage.setItem('sm_ti',this.allTokIn);localStorage.setItem('sm_to',this.allTokOut);localStorage.setItem('sm_ac',this.allCalls);this.updTok();}
-    return d.content?.find(b=>b.type==='text')?.text??'';
+  async api(msgs,{system,maxTok=1000,timeout=30000}={}){
+    const ac=new AbortController();const tid=setTimeout(()=>ac.abort(),timeout);
+    try{
+      const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',signal:ac.signal,headers:{'Content-Type':'application/json','x-api-key':this.key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:maxTok,...(system?{system}:{}),messages:msgs})});
+      clearTimeout(tid);
+      if(!r.ok)throw new Error(await r.text().catch(()=>r.status));
+      const d=await r.json();
+      if(d.usage){const i=d.usage.input_tokens||0,o=d.usage.output_tokens||0;this.tokIn+=i;this.tokOut+=o;this.apiCalls++;this.allTokIn+=i;this.allTokOut+=o;this.allCalls++;localStorage.setItem('sm_ti',this.allTokIn);localStorage.setItem('sm_to',this.allTokOut);localStorage.setItem('sm_ac',this.allCalls);this.updTok();}
+      return d.content?.find(b=>b.type==='text')?.text??'';
+    }catch(e){clearTimeout(tid);throw e;}
   },
   updTok(){const t=this.allTokIn+this.allTokOut;const c=(this.allTokIn/1e6)*3+(this.allTokOut/1e6)*15;$('nTok').textContent=(t<1000?t+' tok':(t/1000).toFixed(1)+'K')+' · '+(c<.01?'<1¢':'$'+c.toFixed(2));},
 
@@ -745,6 +763,10 @@ VOICE: Short sentences. Math in words. NEVER describe emojis.`;
     this.nb=[];['sbEntries','nbMEntries'].forEach(id=>$(id).innerHTML='');
     $('vPractice').hidden=true;$('vChat').hidden=true;$('nbFab').classList.remove('show');
     $('bPause').hidden=true;$('bPause').textContent='⏸ Break';$('bPause').classList.add('btn-g');$('bPause').classList.remove('btn-warn');
+    // Restore any hidden-via-style elements
+    $('qInput').style.display='';$('bCheck').style.display='';$('bCalc').hidden=false;
+    $('qInput').disabled=false;$('bCheck').disabled=false;$('bCheck').textContent='✓ Check';
+    $('dNext').style.display='none';$('dbg').style.display='none';
     document.body.classList.remove('dark');
     document.documentElement.style.setProperty('--accent','#6c5ce7');
   },
@@ -769,7 +791,9 @@ VOICE: Short sentences. Math in words. NEVER describe emojis.`;
     $('uploadArea').hidden=true;$('bTypeOwn').hidden=true;
     $('qCard').hidden=false;$('dActs').hidden=false;$('dChips').hidden=false;
     $('wsTracker').style.display='none';$('bSwitchQ').hidden=true;
-    $('qInput').value='';$('qInput').disabled=false;$('bCheck').disabled=false;$('bCheck').textContent='✓ Check';
+    $('qInput').value='';$('qInput').disabled=false;$('qInput').style.display='';
+    $('bCheck').disabled=false;$('bCheck').textContent='✓ Check';$('bCheck').style.display='';
+    $('bCalc').hidden=false;
     $('qFB').hidden=true;$('qHint').hidden=true;$('dNext').style.display='none';
     $('bHelp').textContent='I need help!';$('bHelp').hidden=false;
     $('bHelp').classList.add('btn-help');$('bHelp').classList.remove('btn-a');
@@ -859,7 +883,11 @@ Do NOT solve. Just list every single sub-exercise.`}];
           this.showWsPicker();
           this.speak('I found '+problems.length+' exercises. Pick one to start!');
         }
-      }catch(e){$('qText').textContent='Could not read photo. Try again.';$('qInput').disabled=false;$('bCheck').disabled=false;}
+      }catch(e){
+        $('qNum').textContent='Oops!';
+        $('qText').innerHTML='<div style="text-align:center"><div style="font-size:2rem;margin-bottom:8px">😕</div><div style="font-weight:700;margin-bottom:12px">Could not read the photo. Try again with a clearer picture!</div><div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap"><button class="btn btn-a btn-sm" onclick="$(\'fileIn\').click()">📸 Try again</button><button class="btn btn-g btn-sm" onclick="App.typeOwnProblem()">✏️ Type instead</button></div></div>';
+        $('qInput').style.display='none';$('bCheck').style.display='none';$('dActs').hidden=true;
+      }
     };reader.readAsDataURL(file);
   },
 
@@ -915,8 +943,10 @@ Do NOT solve. Just list every single sub-exercise.`}];
     });
     h+='</div>';
     $('qText').innerHTML=h;$('qInput').disabled=true;$('bCheck').disabled=true;
-    $('qFB').hidden=true;$('qHint').hidden=true;$('dNext').style.display='none';$('bHelp').hidden=true;$('bSwitchQ').hidden=true;
-    $('qInput').value='';
+    $('qFB').hidden=true;$('qHint').hidden=true;$('dNext').style.display='none';
+    $('bHelp').hidden=true;$('bSwitchQ').hidden=true;$('bCalc').hidden=true;
+    $('dActs').hidden=true;
+    $('qInput').value='';$('qInput').style.display='none';$('bCheck').style.display='none';
     // Bind click on non-done items
     $('qText').querySelectorAll('.ws-pick-item').forEach(el=>{
       const idx=parseInt(el.dataset.idx);
@@ -964,9 +994,13 @@ Do NOT solve. Just list every single sub-exercise.`}];
     }
     $('qText').innerHTML=qHtml;
 
+    // Restore input & check button visibility (hidden during picker)
+    $('qInput').style.display='';$('bCheck').style.display='';
+    $('bCalc').hidden=false;
     // Fully clear answer state
     $('qInput').disabled=false;$('bCheck').disabled=false;$('qInput').value='';$('qInput').placeholder='Your answer…';
     $('qFB').hidden=true;$('qHint').hidden=true;$('dNext').style.display='none';
+    $('dActs').hidden=false;
     $('bHelp').textContent='I need help!';$('bHelp').hidden=false;
     $('bHelp').classList.add('btn-help');$('bHelp').classList.remove('btn-a');
     $('bCheck').textContent='✓ Check';
@@ -982,6 +1016,7 @@ Do NOT solve. Just list every single sub-exercise.`}];
   typeOwnProblem(){
     $('uploadArea').hidden=true;$('bTypeOwn').hidden=true;$('qCard').hidden=false;$('dActs').hidden=false;
     $('qNum').textContent='Your exercise';
+    $('qInput').style.display='';$('bCheck').style.display='';
     $('qText').innerHTML='Type your problem below:<br><br><textarea id="ownQ" class="qcard-input" style="width:100%;min-height:60px;resize:vertical;font-size:1.1rem" placeholder="e.g. What is 3/4 + 2/5?"></textarea><br><button class="qcard-check" id="bOwnSet" style="margin-top:8px;width:100%">Set problem</button>';
     $('qInput').disabled=true;$('bCheck').disabled=true;$('bHelp').hidden=true;
     setTimeout(()=>{const btn=$('bOwnSet');if(btn)btn.onclick=()=>{const q=$('ownQ')?.value.trim();if(!q)return;this.startOwnQ(q);};},50);
@@ -993,8 +1028,12 @@ Do NOT solve. Just list every single sub-exercise.`}];
     const remaining=probs.length-this.wsDone.size;
     if(remaining<=0){
       this.speak('You finished all problems on this worksheet!');
+      $('qCard').hidden=false;
+      $('qNum').textContent='All done!';
       $('qText').textContent='You finished all problems! Upload a new worksheet or end the session.';
-      $('uploadArea').hidden=false;$('bTypeOwn').hidden=false;$('qCard').hidden=true;$('dActs').hidden=true;
+      $('qInput').style.display='none';$('bCheck').style.display='none';
+      $('dActs').hidden=true;
+      $('uploadArea').hidden=false;$('bTypeOwn').hidden=false;
       return;
     }
     // Always reset to stage 1 and clear state before showing picker
@@ -1002,7 +1041,7 @@ Do NOT solve. Just list every single sub-exercise.`}];
     this.curQ='';this.curA='';this.wrong=0;
     $('qInput').value='';$('qFB').hidden=true;$('qHint').hidden=true;
     this.showView('vPractice');
-    $('qCard').hidden=false;$('dActs').hidden=false;
+    $('qCard').hidden=false;
     this.showWsPicker();
   },
 
@@ -1032,24 +1071,27 @@ Do NOT solve. Just list every single sub-exercise.`}];
     }
     $('qInput').disabled=true;$('bCheck').disabled=true;$('bCheck').textContent='⏳';
     let v='WRONG';
-    if(this.curA){
-      // Generated: we know the answer
-      const norm=s=>s.toLowerCase().replace(/[\s,%]/g,'').replace(/^-?0+(?=\d)/,'');
-      if(norm(a)===norm(this.curA))v='CORRECT';
-      else try{const r=await this.api([{role:'user',content:`Question: ${this.curQ}\nExpected: ${this.curA}\nStudent: ${a}\nMathematically equal? ONLY reply CORRECT or WRONG.`}],{maxTok:15});v=r.toUpperCase().includes('CORRECT')?'CORRECT':'WRONG';}catch(e){}
-    }else{
-      // Own/worksheet: Claude solves + judges. Include image if available.
-      try{
-        let content;
-        if(this.wsImg&&this.wsProblems.length){
-          content=[{type:'image',source:{type:'base64',media_type:this.wsImg.mt,data:this.wsImg.b64}},{type:'text',text:`I am solving THIS problem only: ${this.curQ}\nStudent answered: ${a}\nSolve THIS problem yourself (ignore others on page). Reply first line: CORRECT or WRONG. Second line: the correct answer.`}];
-        }else{content=`Problem: ${this.curQ}\nStudent answered: ${a}\nSolve it. Reply first line: CORRECT or WRONG. Second line: correct answer.`;}
-        const r=await this.api([{role:'user',content}],{maxTok:80});
-        v=/CORRECT/i.test(r.trim().split('\n')[0])?'CORRECT':'WRONG';
-      }catch(e){}
-    }
+    try{
+      if(this.curA){
+        const norm=s=>s.toLowerCase().replace(/[\s,%]/g,'').replace(/^-?0+(?=\d)/,'');
+        if(norm(a)===norm(this.curA))v='CORRECT';
+        else try{const r=await this.api([{role:'user',content:`Question: ${this.curQ}\nExpected: ${this.curA}\nStudent: ${a}\nMathematically equal? ONLY reply CORRECT or WRONG.`}],{maxTok:15,timeout:15000});v=r.toUpperCase().includes('CORRECT')?'CORRECT':'WRONG';}catch(e){}
+      }else{
+        try{
+          let content;
+          if(this.wsImg&&this.wsProblems.length){
+            content=[{type:'image',source:{type:'base64',media_type:this.wsImg.mt,data:this.wsImg.b64}},{type:'text',text:`I am solving THIS problem only: ${this.curQ}\nStudent answered: ${a}\nSolve THIS problem yourself (ignore others on page). Reply first line: CORRECT or WRONG. Second line: the correct answer.`}];
+          }else{content=`Problem: ${this.curQ}\nStudent answered: ${a}\nSolve it. Reply first line: CORRECT or WRONG. Second line: correct answer.`;}
+          const r=await this.api([{role:'user',content}],{maxTok:80,timeout:20000});
+          v=/CORRECT/i.test(r.trim().split('\n')[0])?'CORRECT':'WRONG';
+        }catch(e){}
+      }
+    }catch(e){/* ensure we never stay stuck */}
+    // ALWAYS restore buttons
     $('bCheck').textContent='✓ Check';
+    $('qInput').disabled=false;$('bCheck').disabled=false;
     if(v==='CORRECT'){
+      $('qInput').disabled=true;$('bCheck').disabled=true;
       this.ok++;$('qFB').hidden=false;$('qFB').className='fb fb-ok';$('qFBIcon').textContent='✅';
       const praise=['Nailed it!','Correct!',"That's right!",'Spot on!','Brilliant!'][Math.random()*5|0];
       let extra='';if(this.calcUsedOnQ){this.calcQuestions.push(this.qn);extra=' (with calculator)';}
@@ -1061,8 +1103,8 @@ Do NOT solve. Just list every single sub-exercise.`}];
       this.getFormalSolution(this.curQ,this.curA||a);this.updateProg();
     }else{
       this.wrong++;$('qFB').hidden=false;$('qFB').className='fb fb-no';$('qFBIcon').textContent='❌';
-      if(this.wrong===1){$('qFBText').textContent='Not quite — try again!';$('qHint').hidden=false;$('qInput').disabled=false;$('bCheck').disabled=false;$('qInput').value='';setTimeout(()=>$('qInput').focus(),100);}
-      else{$('qFBText').textContent='Tap the help button!';$('qInput').disabled=false;$('bCheck').disabled=false;$('qInput').value='';}
+      if(this.wrong===1){$('qFBText').textContent='Not quite — try again!';$('qHint').hidden=false;$('qInput').value='';setTimeout(()=>$('qInput').focus(),100);}
+      else{$('qFBText').textContent='Tap the help button!';$('qInput').value='';}
     }
   },
 
@@ -1085,6 +1127,9 @@ Do NOT solve. Just list every single sub-exercise.`}];
 
   showOwnStart(){
     $('qCard').hidden=true;$('dActs').hidden=true;$('wsTracker').style.display='none';
+    $('qInput').style.display='';$('bCheck').style.display='';$('bCalc').hidden=false;
+    $('qInput').value='';$('qFB').hidden=true;$('qHint').hidden=true;$('dNext').style.display='none';
+    this.wsProblems=[];this.wsIndex=-1;this.wsDone=new Set();this.wsImg=null;
     $('uploadArea').hidden=false;$('bTypeOwn').hidden=false;
   },
 
@@ -1108,7 +1153,7 @@ Do NOT solve. Just list every single sub-exercise.`}];
       const m="I'm stuck on: "+(this.curStoryQ||this.curPureMath||this.curQ)+"\nGive me ONLY the first step.";
       this.addUserMsg('I need a hint');this.addThinking();
       this.hist.push({role:'user',content:m});
-      this.api(this.hist,{system:this.sysPrompt()}).then(r=>{this.hist.push({role:'assistant',content:r});this.rmThinking();this.addTutorMsg(r);this._adv=false;}).catch(()=>{this.rmThinking();this._adv=false;});
+      this.api(this.hist,{system:this.sysPrompt()}).then(r=>{this.hist.push({role:'assistant',content:r});this.rmThinking();this.addTutorMsg(r);this._adv=false;}).catch(()=>{this.rmThinking();this.addTutorMsg('Oops, connection issue! Tap ← Back and try again.');this._adv=false;});
       $('bChatHelp').textContent='Show all steps';$('bChatHelp').hidden=false;$('chatLbl').textContent='Try the next part!';
     }else if(this.stage>=4){
       this.stage=4;this.updateStageUI();this._adv=true;this.showView('vChat');
@@ -1130,7 +1175,7 @@ Do NOT solve. Just list every single sub-exercise.`}];
           row.innerHTML=b;
         }
         $('chat').appendChild(row);this.scrollChat();this._adv=false;
-      }).catch(()=>{this.rmThinking();this._adv=false;});
+      }).catch(()=>{this.rmThinking();this.addTutorMsg('Oops, connection issue! Tap ← Back and try again.');this._adv=false;});
       $('bChatHelp').hidden=true;$('chatLbl').textContent='Full solution';
     }
   },
@@ -1227,7 +1272,11 @@ Do NOT solve. Just list every single sub-exercise.`}];
   },
   tick(){if(!this.t0||this.paused)return;const el=Date.now()-this.t0,rem=Math.max(0,this.goalMs-el),pct=Math.min(1,el/this.goalMs);$('clkTime').textContent=`${el/60000|0}:${String((el%60000)/1000|0).padStart(2,'0')}`;$('clkLeft').textContent=`${rem/60000|0}:${String((rem%60000)/1000|0).padStart(2,'0')} left`;const ring=$('ring');ring.style.strokeDashoffset=String(100.53*pct);ring.className='clk-ring'+(rem/this.goalMs<=.1?' danger':rem/this.goalMs<=.2?' warn':'');if(rem===0&&!this.timeUp){this.timeUp=true;clearInterval(this.timer);this.burst(14);setTimeout(()=>this.debrief(true),1200);}},
   updateProg(){$('pLabel').textContent=this.qn>0?'Question '+this.qn:"Let's go!";$('pFill').style.width=Math.min(100,(this.ok/Math.max(1,this.qn))*100)+'%';$('pCount').textContent=this.ok+' ✓';},
-  handleErr(e){const m=e.message||String(e);let d='Could not load.\n\n';if(m.includes('401'))d+='API key invalid.';else if(m.includes('429'))d+='Too many requests.';else if(m.includes('Failed to fetch'))d+='No internet.';else d+=m.slice(0,200);$('qText').textContent=d;$('dbg').style.display='block';$('dbg').textContent='key: '+this.key.slice(0,12)+'… | '+m.slice(0,200);},
+  handleErr(e){const m=e.message||String(e);let d='';if(m.includes('401'))d='API key invalid — ask a parent to check.';else if(m.includes('429'))d='Too many requests — wait a moment!';else if(m.includes('Failed to fetch')||m.includes('abort'))d='No internet — check your connection.';else d=m.slice(0,120);
+    $('qNum').textContent='Oops!';
+    $('qText').innerHTML='<div style="text-align:center"><div style="font-size:2rem;margin-bottom:8px">😕</div><div style="font-weight:700;margin-bottom:6px">'+esc(d)+'</div><div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:12px">'+(this.mode==='gen'?'<button class="btn btn-a btn-sm" onclick="App.genQuestion()">🔄 Try again</button>':'<button class="btn btn-a btn-sm" onclick="$(\'fileIn\').click()">📸 Try again</button>')+'</div></div>';
+    $('qInput').style.display='none';$('bCheck').style.display='none';$('dActs').hidden=true;
+    $('dbg').style.display='block';$('dbg').textContent='key: '+this.key.slice(0,12)+'… | '+m.slice(0,200);},
 
   // Email/copy
   buildSummaryText(){
