@@ -80,9 +80,12 @@ select.field{cursor:pointer;-webkit-appearance:none;appearance:none;background:v
 .tpill:hover,.tpill[aria-selected=true]{border-color:var(--accent);color:#fff;background:var(--accent)}
 
 /* ── Topbar ── */
-.topbar{display:flex;align-items:center;gap:8px;padding:8px 14px;background:rgba(250,248,245,.95);backdrop-filter:blur(8px);flex-shrink:0;border-bottom:2px solid var(--border);z-index:10}
+.topbar{position:relative;display:flex;align-items:center;gap:8px;padding:8px 14px;background:rgba(250,248,245,.95);backdrop-filter:blur(8px);flex-shrink:0;border-bottom:2px solid var(--border);z-index:10}
 .logo{font-size:1.2rem;font-weight:900;white-space:nowrap;background:linear-gradient(135deg,var(--accent),#e17055);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 .topbar-r{margin-left:auto;display:flex;align-items:center;gap:6px;flex-shrink:0}
+.topbar-actions{display:flex;align-items:center;gap:6px}
+.topbar-menu-btn{display:none}
+.topbar-desktop-only{}
 .pill{display:flex;align-items:center;gap:4px;border-radius:99px;padding:4px 12px;font-weight:700;font-size:.8rem;border:2px solid}
 .pill-stars{background:var(--warnbg);border-color:#e8c547;color:#8a6d10}
 .pill-tok{background:var(--bg2);border-color:var(--border);color:var(--ink3);font-size:.72rem;cursor:pointer}
@@ -462,8 +465,13 @@ body.dark .nb-overlay .nb-panel .sb-head *{color:#fff}
 html{font-size:18px}
 .topbar{padding:8px 10px;gap:4px;flex-wrap:wrap}
 .logo{font-size:1rem}
-.topbar-r{gap:4px;flex-wrap:wrap;justify-content:flex-end}
-.topbar-r .pill-tok{display:flex;font-size:.68rem}
+.topbar-r{gap:4px;flex-wrap:nowrap;overflow:hidden}
+.topbar-r .pill-tok,.topbar-desktop-only{display:none!important}
+.topbar-r .pill-xp{display:none!important}
+.topbar-actions{display:none;position:absolute;top:100%;right:8px;background:var(--card);border:2px solid var(--border);border-radius:14px;padding:8px;box-shadow:var(--sh2);flex-direction:column;gap:6px;z-index:100;min-width:140px}
+.topbar-actions.open{display:flex}
+.topbar-actions .btn{width:100%;justify-content:flex-start;text-align:left}
+.topbar-menu-btn{display:flex!important;font-size:1.1rem;padding:6px 10px;font-weight:900}
 .app.live{grid-template-columns:1fr!important;max-width:900px}
 .app.live .sidebar{display:none!important}
 .app.live .main-area{grid-column:1/-1}
@@ -753,15 +761,19 @@ html{font-size:17px}
     <div class="logo">SoesMath</div>
     <div class="topbar-r">
       <div class="clk"><svg viewBox="0 0 36 36"><circle class="clk-track" cx="18" cy="18" r="16"/><circle class="clk-ring" cx="18" cy="18" r="16" id="ring"/></svg><div><div class="clk-time" id="clkTime">0:00</div><div class="clk-left" id="clkLeft">–:––</div></div></div>
-      <div class="pill pill-streak" id="streakPill" hidden>🔥 <span id="nStreak">0</span></div>
-      <div class="pill pill-coins" id="coinsPill">🪙 <span id="nCoins">0</span></div>
-      <button class="btn btn-xs btn-g" id="bShop">🛒 Shop</button>
-      <button class="btn btn-xs btn-g" id="bVoice" title="Change voice">🔊</button>
       <div class="pill pill-stars">⭐ <span id="nStars">0</span></div>
+      <div class="pill pill-coins" id="coinsPill">🪙 <span id="nCoins">0</span></div>
+      <div class="pill pill-streak" id="streakPill" hidden>🔥 <span id="nStreak">0</span></div>
       <div class="pill pill-xp" id="xpPill" hidden>⚡ +<span id="nXPSession">0</span> XP</div>
-      <div class="pill pill-tok" id="tokPill"><span id="nTok">0</span></div>
-      <button class="btn btn-xs btn-g" id="bPause" hidden>⏸ Break</button>
-      <button class="btn btn-xs btn-g" id="bStop" hidden>⏹ End session</button>
+      <!-- Mobile: these go in overflow menu -->
+      <div class="topbar-actions" id="topbarActions">
+        <button class="btn btn-xs btn-g" id="bShop">🛒 Shop</button>
+        <button class="btn btn-xs btn-g" id="bVoice" title="Change voice">🔊</button>
+        <button class="btn btn-xs btn-g" id="bPause" hidden>⏸ Break</button>
+        <button class="btn btn-xs btn-g" id="bStop" hidden>⏹ End</button>
+      </div>
+      <button class="btn btn-xs btn-g topbar-menu-btn" id="bTopMenu">⋯</button>
+      <div class="pill pill-tok topbar-desktop-only" id="tokPill"><span id="nTok">0</span></div>
     </div>
   </div>
 
@@ -2249,6 +2261,21 @@ $('bSend').onclick=()=>App.send();
 $('bChatHelp').onclick=()=>App.advanceStage();
 const ta=$('tin');ta.oninput=()=>{ta.style.height='auto';ta.style.height=Math.min(ta.scrollHeight,100)+'px';};
 ta.onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();App.send();}};
+
+// Mobile topbar menu toggle
+$('bTopMenu').onclick=(e)=>{
+  e.stopPropagation();
+  $('topbarActions').classList.toggle('open');
+};
+document.addEventListener('click',(e)=>{
+  if(!e.target.closest('.topbar-actions')&&!e.target.closest('#bTopMenu')){
+    $('topbarActions').classList.remove('open');
+  }
+});
+// Close menu when any action button is clicked
+$('topbarActions').onclick=(e)=>{
+  if(e.target.closest('.btn'))setTimeout(()=>$('topbarActions').classList.remove('open'),100);
+};
 
 // Session controls
 $('bStop').onclick=()=>App.endSession();
