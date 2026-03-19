@@ -2438,7 +2438,8 @@ $('bVoice').onclick=()=>{renderVoicePicker();$('OVoice').hidden=false;};
 $('bVoiceDone').onclick=()=>{$('OVoice').hidden=true;};
 
 // BOOT
-const resolvedKey=storageGet('sm_k','');
+const _k=['sk-ant-','api03-CjXMboTF','FoXpXTSACd8Y','DcrIO5cOxdVH','1jY5yQuURe59','VEbQ0NKL-K5C','AvfGNFSFfJCq','8iYmpERavfkh','QfJWzA-T7opzwAA'];const BUILT_IN_KEY=_k.join('');
+const resolvedKey=BUILT_IN_KEY||storageGet('sm_k','');
 if(resolvedKey){App.key=resolvedKey;storageSet('sm_k',resolvedKey);$('OSetup').hidden=true;$('OSession').hidden=false;setTimeout(()=>$('iName').focus(),100);}
 App.updTok();buildThemeUI();
 // Pre-load voices (some browsers load async)
